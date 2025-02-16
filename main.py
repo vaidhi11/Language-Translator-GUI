@@ -1,67 +1,50 @@
-# ---- GUI Section (You) ---- #
-from tkinter import *
+"""vaidhi - Exception Handling
+Responsible for handling errors and network connectivity issues."""
 
-root =Tk()
-root.title("Language translater")
-root.iconbitmap("C:/Users/bk701/OneDrive/Desktop/Language-Translator-GUI/image/translate.ico")
-root.geometry("880x300")
+import socket
+from googletrans import Translator, LANGUAGES
 
-def translate_it():
-    pass
+translator = Translator()
 
+# Function to check internet connectivity
+def check_internet():
+    try:
+        socket.create_connection(("8.8.8.8", 53), timeout=2)  # Google's public DNS
+        return True
+    except OSError:
+        return False
 
-#Text Boxes
-original_text= Text(root, height=10, width=40)
-original_text.grid(row=0,column=0,pady=20,padx=10)
+# Function to translate text
+def Translate():
+    if not check_internet():
+        messagebox.showerror("Network Error", "No Internet Connection! Please check your connection.")
+        return
 
-translate_button=Button(root, text="Translate!",font=("Helvetica",24), command=translate_it)
-translate_button.grid(row=0,column=1,padx=10)
+    input_text = Input_text.get(1.0, END).strip()
+    source_lang = src_lang.get().strip().lower()
+    target_lang = dest_lang.get().strip().lower()
 
-translate_text=Text(root, height=10, width=40)
-translate_text.grid(row=0,column=2,pady=20,padx=10)
+    if not input_text:
+        messagebox.showwarning("Warning", "Please enter text to translate!")
+        return
 
-#original_combo=ttk.Combobox(root, width=50,value=)
+    if source_lang not in lang_map or target_lang not in lang_map:
+        messagebox.showerror("Error", "Please check selection of Input/Output Language.")
+        return
 
+    try:
+        translated = translator.translate(text=input_text, src=lang_map[source_lang], dest=lang_map[target_lang])
+        Output_text.delete(1.0, END)
+        Output_text.insert(END, translated.text)  
+    except Exception as e:
+        messagebox.showerror("Translation Error", f"Error: {str(e)}")
 
-root.mainloop()
+# Copy text to clipboard
+def copy_text(text_widget):
+    root.clipboard_clear()
+    root.clipboard_append(text_widget.get(1.0, END))
+    root.update()
 
-
-# ---- Translation Section (Vaidhi) ---- #
-
-
-
-# ---- TTS Section (mayank) ---- #
-from tkinter import *
-from tts import text_to_speech  # Importing TTS module
-
-root = Tk()
-root.title("Language Translator")
-root.iconbitmap("C:/Users/bk701/OneDrive/Desktop/Language-Translator-GUI/image/translate.ico")
-root.geometry("880x350")
-
-def translate_it():
-    """Dummy translation function (Replace with actual logic)"""
-    translated_text = original_text.get("1.0", END).strip()[::-1]  # Reverse text as placeholder
-    translate_text.delete("1.0", END)
-    translate_text.insert(END, translated_text)
-
-def speak_text():
-    """Fetch translated text and pass it to TTS module."""
-    text = translate_text.get("1.0", END).strip()
-    text_to_speech(text)  # Call TTS function
-
-# Text Boxes
-original_text = Text(root, height=10, width=40)
-original_text.grid(row=0, column=0, pady=20, padx=10)
-
-translate_button = Button(root, text="Translate!", font=("Helvetica", 24), command=translate_it)
-translate_button.grid(row=0, column=1, padx=10)
-
-translate_text = Text(root, height=10, width=40)
-translate_text.grid(row=0, column=2, pady=20, padx=10)
-
-# TTS Button
-tts_button = Button(root, text="🔊 Speak", font=("Helvetica", 14), command=speak_text)
-tts_button.grid(row=1, column=2, pady=10)
-
-root.mainloop()
+# Paste text from clipboard
+def paste_text(text_widget):
+    text_widget.insert(INSERT, root.clipboard_get())
